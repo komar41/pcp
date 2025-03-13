@@ -21,35 +21,8 @@ var m = [60, 0, 10, 0],
     legend,
     render_speed = 50,
     brush_count = 0,
-    excluded_groups = [];
-
-var colors = {
-  "Baby Foods": [185,56,73],
-  "Baked Products": [37,50,75],
-  "Beef Products": [325,50,39],
-  "Beverages": [10,28,67],
-  "Breakfast Cereals": [271,39,57],
-  "Cereal Grains and Pasta": [56,58,73],
-  "Dairy and Egg Products": [28,100,52],
-  "Ethnic Foods": [41,75,61],
-  "Fast Foods": [60,86,61],
-  "Fats and Oils": [30,100,73],
-  "Finfish and Shellfish Products": [318,65,67],
-  "Fruits and Fruit Juices": [274,30,76],
-  "Lamb, Veal, and Game Products": [20,49,49],
-  "Legumes and Legume Products": [334,80,84],
-  "Meals, Entrees, and Sidedishes": [185,80,45],
-  "Nut and Seed Products": [10,30,42],
-  "Pork Products": [339,60,49],
-  "Poultry Products": [359,69,49],
-  "Restaurant Foods": [204,70,41],
-  "Sausages and Luncheon Meats": [1,100,79],
-  "Snacks": [189,57,75],
-  "Soups, Sauces, and Gravies": [110,57,70],
-  "Spices and Herbs": [214,55,79],
-  "Sweets": [339,60,75],
-  "Vegetables and Vegetable Products": [120,56,40]
-};
+    removed_axes = [],
+    jsonData
 
 // Scale chart and canvas height
 d3.select("#chart")
@@ -85,17 +58,31 @@ var svg = d3.select("svg")
   .append("svg:g")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
+d3.json("test.json", function(raw_data) {
+  jsonData = raw_data.map(function(d) {
+    for (var k in d['f_xyz']) {
+      
+        d['f_xyz'][k] = ((parseFloat(d['f_xyz'][k]) / 2) + 0.5) * 100
+      
+    };
+    return d['f_xyz'];
+  });
+
+  console.log(jsonData);
+});
+
 // Load the data and visualization
-d3.csv("tripled_dataset.csv", function(raw_data) {
+d3.json("test.json", function(raw_data) {
   // Convert quantitative scales to floats
   data = raw_data.map(function(d) {
-    for (var k in d) {
-      if (!_.isNaN(raw_data[0][k] - 0) && k != 'id') {
-        d[k] = parseFloat(d[k]) || 0;
-      }
+    for (var k in d['f_xyz']) {
+      
+        d['f_xyz'][k] = ((parseFloat(d['f_xyz'][k]) / 2) + 0.5) * 100
+      
     };
-    return d;
+    return d['f_xyz'];
   });
+  
 
   // Extract the list of numerical dimensions and create a scale for each.
   xscale.domain(dimensions = d3.keys(data[0]).filter(function(k) {
@@ -134,7 +121,7 @@ d3.csv("tripled_dataset.csv", function(raw_data) {
         .on("dragend", function(d) {
           if (!this.__dragged__) {
             // no movement, invert axis
-            var extent = invert_axis(d);
+            // var extent = invert_axis(d);
 
           } else {
             // reorder axes
@@ -189,108 +176,18 @@ d3.csv("tripled_dataset.csv", function(raw_data) {
       .append("title")
         .text("Drag or resize this filter");
 
-
-  legend = create_legend(colors,brush);
-
   // Render full foreground
   brush();
 
 });
-
-// copy one canvas to another, grayscale
-function gray_copy(source, target) {
-  var pixels = source.getImageData(0,0,w,h);
-  target.putImageData(grayscale(pixels),0,0);
-}
-
-// http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
-function grayscale(pixels, args) {
-  var d = pixels.data;
-  for (var i=0; i<d.length; i+=4) {
-    var r = d[i];
-    var g = d[i+1];
-    var b = d[i+2];
-    // CIE luminance for the RGB
-    // The human eye is bad at seeing red and blue, so we de-emphasize them.
-    var v = 0.2126*r + 0.7152*g + 0.0722*b;
-    d[i] = d[i+1] = d[i+2] = v
-  }
-  return pixels;
-};
-
-function create_legend(colors,brush) {
-  // create legend
-  var legend_data = d3.select("#legend")
-    .html("")
-    .selectAll(".row")
-    .data( _.keys(colors).sort() )
-
-  // filter by group
-  var legend = legend_data
-    .enter().append("div")
-      .attr("title", "Hide group")
-      .on("click", function(d) { 
-        // toggle food group
-        if (_.contains(excluded_groups, d)) {
-          d3.select(this).attr("title", "Hide group")
-          excluded_groups = _.difference(excluded_groups,[d]);
-          brush();
-        } else {
-          d3.select(this).attr("title", "Show group")
-          excluded_groups.push(d);
-          brush();
-        }
-      });
-
-  legend
-    .append("span")
-    .style("background", function(d,i) { return color(d,0.85)})
-    .attr("class", "color-bar");
-
-  legend
-    .append("span")
-    .attr("class", "tally")
-    .text(function(d,i) { return 0});  
-
-  legend
-    .append("span")
-    .text(function(d,i) { return " " + d});  
-
-  return legend;
-}
  
 // render polylines i to i+render_speed 
 function render_range(selection, i, max, opacity) {
+  // console.log(selection);
   selection.slice(i,max).forEach(function(d) {
-    path(d, foreground, color(d.group,opacity));
+    path(d, foreground, color(opacity));
   });
 };
-
-// simple data table
-function data_table(sample) {
-  // sort by first column
-  var sample = sample.sort(function(a,b) {
-    var col = d3.keys(a)[0];
-    return a[col] < b[col] ? -1 : 1;
-  });
-
-  var table = d3.select("#food-list")
-    .html("")
-    .selectAll(".row")
-      .data(sample)
-    .enter().append("div")
-      .on("mouseover", highlight)
-      .on("mouseout", unhighlight);
-
-  table
-    .append("span")
-      .attr("class", "color-block")
-      .style("background", function(d) { return color(d.group,0.85) })
-
-  table
-    .append("span")
-      .text(function(d) { return d.name; })
-}
 
 // Adjusts rendering speed 
 function optimize(timer) {
@@ -299,75 +196,6 @@ function optimize(timer) {
   render_speed = Math.min(render_speed, 300);
   return (new Date()).getTime();
 }
-
-// Feedback on rendering progress
-function render_stats(i,n,render_speed) {
-  d3.select("#rendered-count").text(i);
-  d3.select("#rendered-bar")
-    .style("width", (100*i/n) + "%");
-  d3.select("#render-speed").text(render_speed);
-}
-
-// Feedback on selection
-function selection_stats(opacity, n, total) {
-  d3.select("#data-count").text(total);
-  d3.select("#selected-count").text(n);
-  d3.select("#selected-bar").style("width", (100*n/total) + "%");
-  d3.select("#opacity").text((""+(opacity*100)).slice(0,4) + "%");
-}
-
-// Highlight single polyline
-function highlight(d) {
-  d3.select("#foreground").style("opacity", "0.25");
-  d3.selectAll(".row").style("opacity", function(p) { return (d.group == p) ? null : "0.3" });
-  path(d, highlighted, color(d.group,1));
-}
-
-// Remove highlight
-function unhighlight() {
-  d3.select("#foreground").style("opacity", null);
-  d3.selectAll(".row").style("opacity", null);
-  highlighted.clearRect(0,0,w,h);
-}
-
-function invert_axis(d) {
-  // save extent before inverting
-  if (!yscale[d].brush.empty()) {
-    var extent = yscale[d].brush.extent();
-  }
-  if (yscale[d].inverted == true) {
-    yscale[d].range([h, 0]);
-    d3.selectAll('.label')
-      .filter(function(p) { return p == d; })
-      .style("text-decoration", null);
-    yscale[d].inverted = false;
-  } else {
-    yscale[d].range([0, h]);
-    d3.selectAll('.label')
-      .filter(function(p) { return p == d; })
-      .style("text-decoration", "underline");
-    yscale[d].inverted = true;
-  }
-  return extent;
-}
-
-// Draw a single polyline
-/*
-function path(d, ctx, color) {
-  if (color) ctx.strokeStyle = color;
-  var x = xscale(0)-15;
-      y = yscale[dimensions[0]](d[dimensions[0]]);   // left edge
-  ctx.beginPath();
-  ctx.moveTo(x,y);
-  dimensions.map(function(p,i) {
-    x = xscale(p),
-    y = yscale[p](d[p]);
-    ctx.lineTo(x, y);
-  });
-  ctx.lineTo(x+15, y);                               // right edge
-  ctx.stroke();
-}
-*/
 
 function path(d, ctx, color) {
   if (color) ctx.strokeStyle = color;
@@ -390,9 +218,10 @@ function path(d, ctx, color) {
   ctx.stroke();
 };
 
-function color(d,a) {
-  var c = colors[d];
-  return ["hsla(",c[0],",",c[1],"%,",c[2],"%,",a,")"].join("");
+function color(a) {
+  // var c = colors[d];
+  // console.log(a)
+  return "rgba(117,112,179, " + a + ")";
 }
 
 function position(d) {
@@ -444,20 +273,13 @@ function brush() {
   // Get lines within extents
   var selected = [];
   data
-    .filter(function(d) {
-      return !_.contains(excluded_groups, d.group);
-    })
     .map(function(d) {
       return actives.every(function(p, dimension) {
         return extents[dimension][0] <= d[p] && d[p] <= extents[dimension][1];
       }) ? selected.push(d) : null;
     });
 
-  // free text search
-  var query = d3.select("#search")[0][0].value;
-  if (query.length > 0) {
-    selected = search(selected, query);
-  }
+  // console.log(selected);
 
   if (selected.length < data.length && selected.length > 0) {
     d3.select("#keep-data").attr("disabled", null);
@@ -466,29 +288,6 @@ function brush() {
     d3.select("#keep-data").attr("disabled", "disabled");
     d3.select("#exclude-data").attr("disabled", "disabled");
   };
-
-  // total by food group
-  var tallies = _(selected)
-    .groupBy(function(d) { return d.group; })
-
-  // include empty groups
-  _(colors).each(function(v,k) { tallies[k] = tallies[k] || []; });
-
-  legend
-    .style("text-decoration", function(d) { return _.contains(excluded_groups,d) ? "line-through" : null; })
-    .attr("class", function(d) {
-      return (tallies[d].length > 0)
-           ? "row"
-           : "row off";
-    });
-
-  legend.selectAll(".color-bar")
-    .style("width", function(d) {
-      return Math.ceil(600*tallies[d].length/data.length) + "px"
-    });
-
-  legend.selectAll(".tally")
-    .text(function(d,i) { return tallies[d].length });  
 
   // Render selected lines
   paths(selected, foreground, brush_count, true);
@@ -501,11 +300,8 @@ function paths(selected, ctx, count) {
       opacity = d3.min([2/Math.pow(n,0.3),1]),
       timer = (new Date()).getTime();
 
-  selection_stats(opacity, n, data.length)
-
   shuffled_data = _.shuffle(selected);
 
-  data_table(shuffled_data.slice(0,25));
 
   ctx.clearRect(0,0,w+1,h+1);
 
@@ -514,7 +310,6 @@ function paths(selected, ctx, count) {
     if (i >= n || count < brush_count) return true;
     var max = d3.min([i+render_speed, n]);
     render_range(shuffled_data, i, max, opacity);
-    render_stats(max,n,render_speed);
     i = max;
     timer = optimize(timer);  // adjusts render_speed
   };
@@ -524,6 +319,7 @@ function paths(selected, ctx, count) {
 
 // transition ticks for reordering, rescaling and inverting
 function update_ticks(d, extent) {
+
   // update brushes
   if (d) {
     var brush_el = d3.selectAll(".brush")
@@ -542,8 +338,6 @@ function update_ticks(d, extent) {
   }
 
   brush_count++;
-
-  show_ticks();
 
   // update axes
   d3.selectAll(".axis")
@@ -598,33 +392,13 @@ function actives() {
   // filter extents and excluded groups
   var selected = [];
   data
-    .filter(function(d) {
-      return !_.contains(excluded_groups, d.group);
-    })
     .map(function(d) {
     return actives.every(function(p, i) {
       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
     }) ? selected.push(d) : null;
   });
 
-  // free text search
-  var query = d3.select("#search")[0][0].value;
-  if (query > 0) {
-    selected = search(selected, query);
-  }
-
   return selected;
-}
-
-// Export data
-function export_csv() {
-  var keys = d3.keys(data[0]);
-  var rows = actives().map(function(row) {
-    return keys.map(function(k) { return row[k]; })
-  });
-  var csv = d3.csv.format([keys].concat(rows)).replace(/\n/g,"<br/>\n");
-  var styles = "<style>body { font-family: sans-serif; font-size: 12px; }</style>";
-  window.open("text/csv").document.write(styles + csv);
 }
 
 // scale to window size
@@ -670,77 +444,83 @@ window.onresize = function() {
   brush();
 };
 
-// Remove all but selected from the dataset
-function keep_data() {
-  new_data = actives();
-  if (new_data.length == 0) {
-    alert("I don't mean to be rude, but I can't let you remove all the data.\n\nTry removing some brushes to get your data back. Then click 'Keep' when you've selected data you want to look closer at.");
-    return false;
-  }
-  data = new_data;
-  rescale();
-}
-
-// Exclude selected from the dataset
-function exclude_data() {
-  new_data = _.difference(data, actives());
-  if (new_data.length == 0) {
-    alert("I don't mean to be rude, but I can't let you remove all the data.\n\nTry selecting just a few data points then clicking 'Exclude'.");
-    return false;
-  }
-  data = new_data;
-  rescale();
-}
-
 function remove_axis(d,g) {
   dimensions = _.difference(dimensions, [d]);
+  // console.log(dimensions);
+  removed_axes.push(d);
   xscale.domain(dimensions);
   g.attr("transform", function(p) { return "translate(" + position(p) + ")"; });
   g.filter(function(p) { return p == d; }).remove(); 
   update_ticks();
+  update_dropdown();
 }
 
-d3.select("#keep-data").on("click", keep_data);
-d3.select("#exclude-data").on("click", exclude_data);
-d3.select("#export-data").on("click", export_csv);
-d3.select("#search").on("keyup", brush);
+function update_dropdown() {
+  // console.log(removed_axes);
+  var dropdown = d3.select("#axis-dropdown");
+  dropdown.selectAll("option").remove();
+  
+  dropdown.append("option")
+    .attr("value", "")
+    .attr("disabled", true)
+    .attr("selected", true)
+    .text("Select an axis");
 
-
-// Appearance toggles
-d3.select("#hide-ticks").on("click", hide_ticks);
-d3.select("#show-ticks").on("click", show_ticks);
-d3.select("#dark-theme").on("click", dark_theme);
-d3.select("#light-theme").on("click", light_theme);
-
-function hide_ticks() {
-  d3.selectAll(".axis g").style("display", "none");
-  //d3.selectAll(".axis path").style("display", "none");
-  d3.selectAll(".background").style("visibility", "hidden");
-  d3.selectAll("#hide-ticks").attr("disabled", "disabled");
-  d3.selectAll("#show-ticks").attr("disabled", null);
-};
-
-function show_ticks() {
-  d3.selectAll(".axis g").style("display", null);
-  //d3.selectAll(".axis path").style("display", null);
-  d3.selectAll(".background").style("visibility", null);
-  d3.selectAll("#show-ticks").attr("disabled", "disabled");
-  d3.selectAll("#hide-ticks").attr("disabled", null);
-};
-
-function dark_theme() {
-  d3.select("body").attr("class", "dark");
-  d3.selectAll("#dark-theme").attr("disabled", "disabled");
-  d3.selectAll("#light-theme").attr("disabled", null);
+  removed_axes.forEach(function(axis) {
+    dropdown.append("option")
+      .attr("value", axis)
+      .text(axis);
+  });
 }
 
-function light_theme() {
-  d3.select("body").attr("class", null);
-  d3.selectAll("#light-theme").attr("disabled", "disabled");
-  d3.selectAll("#dark-theme").attr("disabled", null);
+function add_axis(axisName) {
+  if (!axisName) return;
+
+  removed_axes = removed_axes.filter(a => a !== axisName); // Remove from removed list
+  dimensions.push(axisName); // Add back to active dimensions
+  xscale.domain(dimensions); // Update x-scale
+  
+  // Create a new axis group for the added dimension
+  var g = svg.selectAll(".dimension")
+      .data(dimensions, d => d);
+
+    var newAxis = g.enter().append("g")
+      .attr("class", "dimension")
+      .attr("transform", d => "translate(" + xscale(d) + ")");
+
+      newAxis.append("g")
+      .attr("class", "axis")
+      .each(function(d) { d3.select(this).call(axis.scale(yscale[d])); })
+    .append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", -14)
+      .attr("x", 0)
+      .attr("class", "label")
+      .text(String)
+      .append("title")
+      .text("Click to invert. Drag to reorder");
+
+    // Add brush functionality
+  newAxis.append("g")
+  .attr("class", "brush")
+  .each(function(d) {
+    d3.select(this).call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush));
+  })
+.selectAll("rect")
+  .style("visibility", null)
+  .attr("x", -23)
+  .attr("width", 36)
+  .append("title")
+  .text("Drag up or down to brush along this axis");
+
+  // **Force reordering of all axes to ensure correct spacing**
+  d3.selectAll(".dimension")
+      .transition().duration(500)
+      .attr("transform", d => "translate(" + xscale(d) + ")");
+  
+
+  update_ticks();
+  update_dropdown();
+  brush();
 }
 
-function search(selection,str) {
-  pattern = new RegExp(str,"i")
-  return _(selection).filter(function(d) { return pattern.exec(d.name); });
-}
