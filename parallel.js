@@ -7,22 +7,23 @@ var width = document.body.clientWidth,
 
 var m = [60, 0, 10, 0],
     w = width - m[1] - m[3],
-    h = height - m[0] - m[2],
-    xscale = d3.scale.ordinal().rangePoints([0, w], 1),
+    h = height - m[0] - m[2];
+
+var xscale = d3.scalePoint().range([0, w]).padding(1), // Updated
     yscale = {},
     dragging = {},
-    line = d3.svg.line(),
-    axis = d3.svg.axis().orient("left").ticks(1+height/50),
+    line = d3.line(), // Updated
+    axis = d3.axisLeft(), // Updated
     data,
     foreground,
     background,
     highlighted,
-    dimensions,                           
+    dimensions,
     legend,
     render_speed = 50,
     brush_count = 0,
     removed_axes = [],
-    jsonData
+    jsonData;
 
 // Scale chart and canvas height
 d3.select("#chart")
@@ -55,104 +56,95 @@ background.lineWidth = 1.7;
 var svg = d3.select("svg")
     .attr("width", w + m[1] + m[3])
     .attr("height", h + m[0] + m[2])
-  .append("svg:g")
+  .append("g")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
-d3.json("test.json", function(raw_data) {
-  jsonData = raw_data.map(function(d) {
-    for (var k in d['f_xyz']) {
-      
-        d['f_xyz'][k] = ((parseFloat(d['f_xyz'][k]) / 2) + 0.5) * 100
-      
-    };
-    return d['f_xyz'];
-  });
-
-  console.log(jsonData);
-});
-
+    
 // Load the data and visualization
-d3.json("test.json", function(raw_data) {
-  // Convert quantitative scales to floats
-  data = raw_data.map(function(d) {
-    for (var k in d['f_xyz']) {
-      
-        d['f_xyz'][k] = ((parseFloat(d['f_xyz'][k]) / 2) + 0.5) * 100
-      
-    };
-    return d['f_xyz'];
+d3.json("test.json").then(raw_data => {
+  data = raw_data.map(d => {
+      for (var k in d['f_xyz']) {
+          d['f_xyz'][k] = ((parseFloat(d['f_xyz'][k]) / 2) + 0.5) * 100;
+      }
+      return d['f_xyz'];
   });
+
+  // data = jsonData;
   
 
   // Extract the list of numerical dimensions and create a scale for each.
-  xscale.domain(dimensions = d3.keys(data[0]).filter(function(k) {
-    return (_.isNumber(data[0][k])) && (yscale[k] = d3.scale.linear()
-      .domain(d3.extent(data, function(d) { return +d[k]; }))
-      .range([h, 0]));
+  xscale.domain(dimensions = Object.keys(data[0]).filter(k => {
+    if (!isNaN(data[0][k])) { // Check if the value is a number
+        yscale[k] = d3.scaleLinear() // Updated from d3.scale.linear()
+            .domain(d3.extent(data, d => +d[k]))
+            .range([h, 0]);
+        return true;
+    }
+    return false;
   }).sort());
 
   // Add a group element for each dimension.
   var g = svg.selectAll(".dimension")
-      .data(dimensions)
-    .enter().append("svg:g")
-      .attr("class", "dimension")
-      .attr("transform", function(d) { return "translate(" + xscale(d) + ")"; })
-      .call(d3.behavior.drag()
-        .on("dragstart", function(d) {
-          dragging[d] = this.__origin__ = xscale(d);
-          this.__dragged__ = false;
-          d3.select("#foreground").style("opacity", "0.35");
+    .data(dimensions)
+    .enter().append("g")
+    .attr("class", "dimension")
+    .attr("transform", d => `translate(${xscale(d)})`)
+    .call(d3.drag()
+        .on("start", function(event, d) { // ✅ Pass event as first argument
+            dragging[d] = this.__origin__ = xscale(d);
+            this.__dragged__ = false;
+            d3.select("#foreground").style("opacity", "0.35");
         })
-        .on("drag", function(d) {
-          dragging[d] = Math.min(w, Math.max(0, this.__origin__ += d3.event.dx));
-          dimensions.sort(function(a, b) { return position(a) - position(b); });
-          xscale.domain(dimensions);
-          g.attr("transform", function(d) { return "translate(" + position(d) + ")"; });
-          brush_count++;
-          this.__dragged__ = true;
+        .on("drag", function(event, d) { // ✅ Use event.dx instead of d3.event.dx
+            dragging[d] = Math.min(w, Math.max(0, this.__origin__ += event.dx)); // ✅ Updated
+            dimensions.sort((a, b) => position(a) - position(b));
+            xscale.domain(dimensions);
+            g.attr("transform", d => `translate(${position(d)})`);
+            brush_count++;
+            this.__dragged__ = true;
 
-          // Feedback for axis deletion if dropped
-          if (dragging[d] < 12 || dragging[d] > w-12) {
-            d3.select(this).select(".background").style("fill", "#b00");
-          } else {
-            d3.select(this).select(".background").style("fill", null);
-          }
+            // Feedback for axis deletion if dropped
+            if (dragging[d] < 12 || dragging[d] > w - 12) {
+                d3.select(this).select(".background").style("fill", "#b00");
+            } else {
+                d3.select(this).select(".background").style("fill", null);
+            }
         })
-        .on("dragend", function(d) {
-          if (!this.__dragged__) {
-            // no movement, invert axis
-            // var extent = invert_axis(d);
+        .on("end", function(event, d) { // ✅ Pass event as first argument
+            if (!this.__dragged__) {
+                // No movement, invert axis
+                // var extent = invert_axis(d);
+            } else {
+                // Reorder axes
+                d3.select(this).transition().attr("transform", `translate(${xscale(d)})`);
+                var extent = yscale[d].brush.extent();
+            }
 
-          } else {
-            // reorder axes
-            d3.select(this).transition().attr("transform", "translate(" + xscale(d) + ")");
+            // Remove axis if dragged all the way left
+            if (dragging[d] < 12 || dragging[d] > w - 12) {
+                remove_axis(d, g);
+            }
 
-            var extent = yscale[d].brush.extent();
-          }
+            // Required to avoid a bug
+            xscale.domain(dimensions);
+            update_ticks(d, extent);
 
-          // remove axis if dragged all the way left
-          if (dragging[d] < 12 || dragging[d] > w-12) {
-            remove_axis(d,g);
-          }
+            // Rerender
+            d3.select("#foreground").style("opacity", null);
+            brush();
+            delete this.__dragged__;
+            delete this.__origin__;
+            delete dragging[d];
+        })
+    );
 
-          // TODO required to avoid a bug
-          xscale.domain(dimensions);
-          update_ticks(d, extent);
-
-          // rerender
-          d3.select("#foreground").style("opacity", null);
-          brush();
-          delete this.__dragged__;
-          delete this.__origin__;
-          delete dragging[d];
-        }))
 
   // Add an axis and title.
-  g.append("svg:g")
+  g.append("g")
       .attr("class", "axis")
       .attr("transform", "translate(0,0)")
       .each(function(d) { d3.select(this).call(axis.scale(yscale[d])); })
-    .append("svg:text")
+    .append("text")
       .attr("text-anchor", "middle")
       .attr("y", function(d,i) { return i%2 == 0 ? -14 : -30 } )
       .attr("x", 0)
@@ -162,9 +154,9 @@ d3.json("test.json", function(raw_data) {
         .text("Click to invert. Drag to reorder");
 
   // Add and store a brush for each axis.
-  g.append("svg:g")
-      .attr("class", "brush")
-      .each(function(d) { d3.select(this).call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush)); })
+  g.append("g")
+      .attr("class", d => `brush brush-${d}`)
+      .each(function(d) { d3.select(this).call(yscale[d].brush = d3.brushY(yscale[d]).on("brush", brush)); })
     .selectAll("rect")
       .style("visibility", null)
       .attr("x", -23)
@@ -233,35 +225,39 @@ function position(d) {
 // TODO refactor
 function brush() {
   brush_count++;
-  var actives = dimensions.filter(function(p) { return !yscale[p].brush.empty(); }),
+  var actives = dimensions.filter(p => {
+      return d3.brushSelection(d3.select(`.brush-${p}`).node()) !== null;
+  });
       extents = actives.map(function(p) { return yscale[p].brush.extent(); });
 
   // hack to hide ticks beyond extent
-  var b = d3.selectAll('.dimension')[0]
+  var b = d3.selectAll('.dimension').nodes() // Get array of elements
     .forEach(function(element, i) {
-      var dimension = d3.select(element).data()[0];
-      if (_.include(actives, dimension)) {
-        var extent = extents[actives.indexOf(dimension)];
+        var dimension = d3.select(element).data()[0];
+
+        if (_.includes(actives, dimension)) { // Updated _.include -> _.includes
+            var extent = extents[actives.indexOf(dimension)];
+            d3.select(element)
+                .selectAll('text')
+                .style('font-weight', 'bold')
+                .style('font-size', '13px')
+                .style('display', function() { 
+                    var value = d3.select(this).data();
+                    return extent[0] <= value && value <= extent[1] ? null : "none";
+                });
+        } else {
+            d3.select(element)
+                .selectAll('text')
+                .style('font-size', null)
+                .style('font-weight', null)
+                .style('display', null);
+        }
+
         d3.select(element)
-          .selectAll('text')
-          .style('font-weight', 'bold')
-          .style('font-size', '13px')
-          .style('display', function() { 
-            var value = d3.select(this).data();
-            return extent[0] <= value && value <= extent[1] ? null : "none"
-          });
-      } else {
-        d3.select(element)
-          .selectAll('text')
-          .style('font-size', null)
-          .style('font-weight', null)
-          .style('display', null);
-      }
-      d3.select(element)
-        .selectAll('.label')
-        .style('display', null);
+            .selectAll('.label')
+            .style('display', null);
     });
-    ;
+    
  
   // bold dimensions with label
   d3.selectAll('.label')
@@ -327,14 +323,14 @@ function update_ticks(d, extent) {
     // single tick
     if (extent) {
       // restore previous extent
-      brush_el.call(yscale[d].brush = d3.svg.brush().y(yscale[d]).extent(extent).on("brush", brush));
+      brush_el.call(yscale[d].brush = d3.brushY(yscale[d]).extent(extent).on("brush", brush));
     } else {
-      brush_el.call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush));
+      brush_el.call(yscale[d].brush = d3.brushY(yscale[d]).on("brush", brush));
     }
   } else {
     // all ticks
     d3.selectAll(".brush")
-      .each(function(d) { d3.select(this).call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush)); })
+      .each(function(d) { d3.select(this).call(yscale[d].brush = d3.brushY(yscale[d]).on("brush", brush)); })
   }
 
   brush_count++;
@@ -423,7 +419,8 @@ window.onresize = function() {
     .select("g")
       .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
   
-  xscale = d3.scale.ordinal().rangePoints([0, w], 1).domain(dimensions);
+      // d3.scalePoint().range([0, w]).padding(1)
+  xscale = d3.scalePoint().range([0, w]).padding(1).domain(dimensions);
   dimensions.forEach(function(d) {
     yscale[d].range([h, 0]);
   });
@@ -432,7 +429,7 @@ window.onresize = function() {
     .attr("transform", function(d) { return "translate(" + xscale(d) + ")"; })
   // update brush placement
   d3.selectAll(".brush")
-    .each(function(d) { d3.select(this).call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush)); })
+    .each(function(d) { d3.select(this).call(yscale[d].brush = d3.brushY(yscale[d]).on("brush", brush)); })
   brush_count++;
 
   // update axis placement
@@ -504,7 +501,7 @@ function add_axis(axisName) {
   newAxis.append("g")
   .attr("class", "brush")
   .each(function(d) {
-    d3.select(this).call(yscale[d].brush = d3.svg.brush().y(yscale[d]).on("brush", brush));
+    d3.select(this).call(yscale[d].brush = d3.brushY(yscale[d]).on("brush", brush));
   })
 .selectAll("rect")
   .style("visibility", null)
