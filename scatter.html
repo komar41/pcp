@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>D3 v7 Scatter Plot with Zoom, Pan & Brush</title>
     <script src="d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" type="text/css" href="scatter.css" />
-</head>
-<body>
+  </head>
+  <body>
     <div class="wrapper-scatter">
-        <div class="container-scatter">
-            <div class="dropdown-container-scatter">
-                <label for="projectionSelect-scatter">Select Projection:</label>
-                <select id="projectionSelect-scatter" class="dropdown-select-scatter">
-                    <option value="PCA">PCA</option>
-                    <option value="UMAP">UMAP</option>
-                    
-                </select>
-            </div>
-        
-            <div class="controls-scatter">
-                <label for="zoomToggle-scatter">
-                    <input type="checkbox" id="zoomToggle-scatter" checked>
-                    Zoom
-                </label>
-            </div>
+      <div class="container-scatter">
+        <div class="dropdown-container-scatter">
+          <label for="projectionSelect-scatter">Select Projection:</label>
+          <select id="projectionSelect-scatter" class="dropdown-select-scatter">
+            <option value="PCA">PCA</option>
+            <option value="UMAP">UMAP</option>
+          </select>
         </div>
 
-        <svg id="svg-scatter" width="350" height="250"></svg>
+        <div class="controls-scatter">
+          <label for="zoomToggle-scatter">
+            <input type="checkbox" id="zoomToggle-scatter" checked />
+            Zoom
+          </label>
+        </div>
+      </div>
+
+      <svg id="svg-scatter"></svg>
     </div>
-    
-</body>
-<script src="scatter.js"></script>
+  </body>
+  <script src="scatter.js"></script>
 </html>

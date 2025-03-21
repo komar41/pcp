@@ -12,7 +12,7 @@ body {
 }
 
 .left-panel {
-  width: 40%;
+  width: 53%;
   background-color: #add8e6; /* light blue */
   display: flex;
   align-items: center;
@@ -21,29 +21,49 @@ body {
 }
 
 .right-panel {
-  width: 60%;
+  width: 47%;
   display: flex;
   flex-direction: column;
 }
 
 .right-box {
-  height: 50%;
+  padding: 10px;
+  height: calc(50% - 6px); /* subtract separator height */
   display: flex;
   align-items: flex-start; /* align content to top */
   justify-content: center;
   /* padding: 10px; */
   box-sizing: border-box;
+  /* shadow border */
 }
 
 .box1 {
   background-color: None; /* red */
   overflow: auto;
+  /* border: 1px solid black; */
 }
 
 .box2 {
-  background-color: #fbbc04; /* orange */
+  background-color: None; /* orange */
+  /* border: 1px solid black; */
 }
 
-.box3 {
-  background-color: #34a853; /* green */
+/* Adds a gap and a dashed line between .box1 and .box2 */
+.separator-line {
+  width: 95%;
+  height: 0;
+  border-top: 1px dashed #888;
+  margin: 8px auto;
+  box-sizing: border-box;
+  border-top-style: dashed;
+  border-top-width: 2px;
+  border-top-color: #888;
+  border-image: repeating-linear-gradient(
+      to right,
+      #ccc,
+      #ccc 8px,
+      transparent 8px,
+      transparent 16px
+    )
+    100;
 }

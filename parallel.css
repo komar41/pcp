@@ -1,7 +1,8 @@
 /* Styling for your container and chart */
-#container {
+#container-pcp {
   width: 100%;
   height: 100%;
+  font-family: "Roboto", sans-serif;
 }
 
 #axis-buttons-pcp {
@@ -29,53 +30,50 @@
   width: 100%;
 }
 
-canvas,
-svg {
+#chart-pcp canvas,
+#chart-pcp svg {
   position: absolute;
   top: 0;
   left: 0;
 }
 
-svg {
-  font-family: "Roboto", sans-serif;
-}
-
-.brush rect.extent {
+#chart-pcp .brush rect.extent {
   fill: rgba(100, 100, 100, 0.15);
   stroke: #fff;
 }
 
-.brush:hover rect.extent {
+#chart-pcp .brush:hover rect.extent {
   stroke: #222;
   stroke-dasharray: 5, 5;
 }
-.brush rect.extent:hover {
+#chart-pcp .brush rect.extent:hover {
   stroke-dasharray: none;
 }
-.resize rect {
+#chart-pcp .resize rect {
   fill: none;
 }
 .background {
   fill: none;
 }
 
-.axis line,
-.axis path {
+#chart-pcp .axis line,
+#chart-pcp .axis path {
   fill: none;
   stroke: #777;
   stroke-width: 1;
 }
 
-.axis .tick {
+#chart-pcp .axis .tick {
   width: 200px;
 }
-.axis text {
+#chart-pcp .axis text {
   fill: #111;
   text-anchor: right;
   font-size: 13px;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
-.axis text.label {
+
+#chart-pcp .axis text.label {
   font-size: 14px;
   cursor: move;
   padding-bottom: 24px;

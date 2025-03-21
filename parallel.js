@@ -27,10 +27,9 @@ window.onload = function () {
   });
 };
 
-var container = document.getElementById("container");
+var container = document.getElementById("container-pcp");
 var width = container.clientWidth,
   height = container.clientHeight - 50;
-console.log(height);
 var m = [30, 0, 10, 0],
   w = width - m[1] - m[3],
   h = height - m[0] - m[2],
@@ -62,19 +61,19 @@ d3.selectAll("canvas")
   .style("padding", m.join("px ") + "px");
 
 // Foreground canvas for primary view
-foreground = document.getElementById("foreground").getContext("2d");
+foreground = document.getElementById("foreground-pcp").getContext("2d");
 foreground.globalCompositeOperation = "destination-over";
 foreground.strokeStyle = "rgba(0,100,160,0.1)";
 foreground.lineWidth = 1.7;
 foreground.fillText("Loading...", w / 2, h / 2);
 
 // Highlight canvas for temporary interactions
-highlighted = document.getElementById("highlight").getContext("2d");
+highlighted = document.getElementById("highlight-pcp").getContext("2d");
 highlighted.strokeStyle = "rgba(0,100,160,1)";
 highlighted.lineWidth = 4;
 
 // Background canvas
-background = document.getElementById("background").getContext("2d");
+background = document.getElementById("background-pcp").getContext("2d");
 background.strokeStyle = "rgba(0,100,160,0.1)";
 background.lineWidth = 1.7;
 
@@ -139,7 +138,7 @@ d3.json("test.json", function (raw_data) {
     .append("text")
     .attr("text-anchor", "middle")
     .attr("y", function (d, i) {
-      return i % 2 == 0 ? -14 : -30;
+      return -14;
     })
     .attr("x", 0)
     .attr("class", "label")
@@ -413,7 +412,7 @@ function actives() {
 }
 
 function update_remove() {
-  var container = document.getElementById("container");
+  var container = document.getElementById("container-pcp");
   var width = container.clientWidth,
     height = container.clientHeight - 50;
 

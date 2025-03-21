@@ -2,10 +2,15 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>Nutrient Database Explorer</title>
+    <title>3D Explorer</title>
+    <script src="d3.v7.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" href="scatter.css" />
     <link rel="stylesheet" type="text/css" href="main.css" />
     <link rel="stylesheet" type="text/css" href="parallel.css" />
-    <!-- <link rel="stylesheet" type="text/css" href="scatter.css" /> -->
   </head>
   <body>
     <div class="main-container">
@@ -14,7 +19,7 @@
       <div class="right-panel">
         <!-- PCP -->
         <div class="right-box box1">
-          <div id="container">
+          <div id="container-pcp">
             <div id="axis-buttons-pcp">
               <button class="axis-btn-pcp" data-axis-pcp="sky">Sky</button>
               <button class="axis-btn-pcp" data-axis-pcp="surface">
@@ -35,15 +40,35 @@
             </div>
 
             <div id="chart-pcp">
-              <canvas id="background"></canvas>
-              <canvas id="foreground"></canvas>
-              <canvas id="highlight"></canvas>
+              <canvas id="background-pcp"></canvas>
+              <canvas id="foreground-pcp"></canvas>
+              <canvas id="highlight-pcp"></canvas>
               <svg id="overlay-svg-pcp"></svg>
             </div>
           </div>
         </div>
 
-        <div class="right-box box2">Box 2</div>
+        <!-- separator -->
+        <div class="separator-line"></div>
+
+        <div class="right-box box2">
+          <div class="wrapper-scatter">
+            <div class="container-scatter">
+              <div class="projection-toggle-scatter">
+                <button id="btn-pca" class="projection-btn active">PCA</button>
+                <button id="btn-umap" class="projection-btn">UMAP</button>
+              </div>
+
+              <div class="controls-scatter">
+                <label for="zoomToggle-scatter">
+                  <input type="checkbox" id="zoomToggle-scatter" checked />
+                  Zoom
+                </label>
+              </div>
+            </div>
+            <svg id="svg-scatter"></svg>
+          </div>
+        </div>
         <!-- <div class="right-box box3">Box 3</div> -->
       </div>
     </div>
@@ -51,5 +76,5 @@
   <script src="https://d3js.org/d3.v2.js"></script>
   <script src="https://underscorejs.org/underscore.js"></script>
   <script src="parallel.js"></script>
-  <!-- <script src="scatter.js"></script> -->
+  <script src="scatter.js"></script>
 </html>
