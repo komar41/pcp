@@ -1,43 +1,53 @@
-html, body {
-  margin: 0;
+/* Styling for your container and chart */
+#container {
   width: 100%;
   height: 100%;
-  padding: 0;
-}
-body { 
-  font-family: Ubuntu, Tahoma, Helvetica, sans-serif;
-  font-size: 12px;
-  line-height: 1.4em;
-  /* background: #f7f7f7; */
-  color: #404040;
 }
 
-a {
-  text-decoration: none;
-}
-.dark a {
-  color: #5ae;
+#axis-buttons-pcp {
+  margin-bottom: 10px;
+  text-align: center;
 }
 
+.axis-btn-pcp {
+  margin: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border: 1px solid #7570b3;
+  background-color: #fff;
+  border-radius: 4px;
+  color: #7570b3;
+}
+
+.axis-btn-pcp.active-axis-pcp {
+  background-color: #7570b3;
+  color: white;
+}
+
+#chart-pcp {
+  position: relative;
+  width: 100%;
+}
+
+canvas,
 svg {
-  font-family: Ubuntu, Tahoma, Helvetica, sans-serif;
-}
-canvas, svg {
   position: absolute;
   top: 0;
   left: 0;
 }
-#chart {
-  position: relative;
+
+svg {
+  font-family: "Roboto", sans-serif;
 }
+
 .brush rect.extent {
-  fill: rgba(100,100,100,0.15);
+  fill: rgba(100, 100, 100, 0.15);
   stroke: #fff;
 }
 
 .brush:hover rect.extent {
   stroke: #222;
-  stroke-dasharray: 5,5;
+  stroke-dasharray: 5, 5;
 }
 .brush rect.extent:hover {
   stroke-dasharray: none;
@@ -49,7 +59,8 @@ canvas, svg {
   fill: none;
 }
 
-.axis line, .axis path {
+.axis line,
+.axis path {
   fill: none;
   stroke: #777;
   stroke-width: 1;
@@ -61,35 +72,11 @@ canvas, svg {
 .axis text {
   fill: #111;
   text-anchor: right;
-  font-size: 11px;
+  font-size: 13px;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 .axis text.label {
-  font-size: 12px;
+  font-size: 14px;
   cursor: move;
   padding-bottom: 24px;
 }
-
-.quarter, .third, .half {
-  float: left;
-}
-.quarter {
-  width: 23%;
-  margin: 0 1%;
-}
-.third {
-  width: 31.3%;
-  margin: 0 1%;
-}
-.half {
-  width: 48%;
-  margin: 0 1%;
-}
-
-#header {
-  border-bottom: 1px solid rgba(100,100,100,0.35);
-  background: #e2e2e2;
-  padding: 6px 24px 4px;
-  line-height: 24px;
-}
-

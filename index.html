@@ -1,34 +1,52 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <title>Nutrient Database Explorer</title>
+    <link rel="stylesheet" type="text/css" href="main.css" />
     <link rel="stylesheet" type="text/css" href="parallel.css" />
     <!-- <link rel="stylesheet" type="text/css" href="scatter.css" /> -->
   </head>
   <body>
-  
-  <div id="header">
-    <label for="axis-dropdown">Add Axis:</label>
-    <select id="axis-dropdown" onchange="add_axis(this.value)">
-      <option value="" disabled selected>Select an axis</option>
-    </select>
-  </div>
-  
-  <div id="chart">
-    <canvas id="background"></canvas>
-    <canvas id="foreground"></canvas>
-    <canvas id="highlight"></canvas>
-    <svg id="overlay-svg-pcp"></svg>
-  </div>
-  <div id="wrap">
-  </div>
+    <div class="main-container">
+      <div class="left-panel">Left Panel</div>
 
-  <div id="scatter-container">
-    <canvas id="canvas-scatter"></canvas>
-    <svg id="overlay-svg-scatter" class="overlay"></svg>
-  </div>
-  
+      <div class="right-panel">
+        <!-- PCP -->
+        <div class="right-box box1">
+          <div id="container">
+            <div id="axis-buttons-pcp">
+              <button class="axis-btn-pcp" data-axis-pcp="sky">Sky</button>
+              <button class="axis-btn-pcp" data-axis-pcp="surface">
+                Surface
+              </button>
+              <button class="axis-btn-pcp" data-axis-pcp="building">
+                Building
+              </button>
+              <button class="axis-btn-pcp" data-axis-pcp="tree">Tree</button>
+              <button class="axis-btn-pcp" data-axis-pcp="water">Water</button>
+              <button class="axis-btn-pcp" data-axis-pcp="miscelaneous">
+                Miscellaneous
+              </button>
+              <button class="axis-btn-pcp" data-axis-pcp="sidewalk">
+                Sidewalk
+              </button>
+              <button class="axis-btn-pcp" data-axis-pcp="road">Road</button>
+            </div>
+
+            <div id="chart-pcp">
+              <canvas id="background"></canvas>
+              <canvas id="foreground"></canvas>
+              <canvas id="highlight"></canvas>
+              <svg id="overlay-svg-pcp"></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-box box2">Box 2</div>
+        <!-- <div class="right-box box3">Box 3</div> -->
+      </div>
+    </div>
   </body>
   <script src="https://d3js.org/d3.v2.js"></script>
   <script src="https://underscorejs.org/underscore.js"></script>
