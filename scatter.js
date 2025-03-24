@@ -43,8 +43,6 @@ function drawScatter() {
   const width = wrapper.clientWidth;
   const height = wrapper.clientHeight - container.offsetHeight;
 
-  console.log(width, height);
-
   updateProjection(currentProjection, width, height);
 }
 
@@ -179,10 +177,11 @@ function updateProjection(projectionType, width, height) {
 drawScatter();
 
 // Listen to dropdown changes
-dropdown.addEventListener("change", drawScatter);
+// dropdown.addEventListener("change", drawScatter);
 
 // Debounced resize listener
 let resizeTimeout;
 window.addEventListener("resize", () => {
+  console.log("resizing");
   drawScatter();
 });

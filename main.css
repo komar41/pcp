@@ -26,6 +26,27 @@ body {
   flex-direction: column;
 }
 
+#category-header {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.category-tab {
+  color: #aaa;
+  font-weight: normal;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.category-tab.selected {
+  color: #7570b3;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
 .right-box {
   padding: 10px;
   height: calc(50% - 6px); /* subtract separator height */

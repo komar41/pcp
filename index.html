@@ -20,30 +20,69 @@
         <!-- PCP -->
         <div class="right-box box1">
           <div id="container-pcp">
-            <div id="axis-buttons-pcp">
-              <button class="axis-btn-pcp" data-axis-pcp="sky">Sky</button>
-              <button class="axis-btn-pcp" data-axis-pcp="surface">
-                Surface
-              </button>
-              <button class="axis-btn-pcp" data-axis-pcp="building">
-                Building
-              </button>
-              <button class="axis-btn-pcp" data-axis-pcp="tree">Tree</button>
-              <button class="axis-btn-pcp" data-axis-pcp="water">Water</button>
-              <button class="axis-btn-pcp" data-axis-pcp="miscelaneous">
-                Miscellaneous
-              </button>
-              <button class="axis-btn-pcp" data-axis-pcp="sidewalk">
-                Sidewalk
-              </button>
-              <button class="axis-btn-pcp" data-axis-pcp="road">Road</button>
+            <div id="category-header">
+              <span class="category-tab selected" data-category="semantics"
+                >Semantics</span
+              >
+              <span class="category-tab" data-category="perception"
+                >Perception</span
+              >
+              <span class="category-tab" data-category="building"
+                >Building Material</span
+              >
             </div>
+
+            <div id="axis-buttons-pcp"></div>
 
             <div id="chart-pcp">
               <canvas id="background-pcp"></canvas>
               <canvas id="foreground-pcp"></canvas>
               <canvas id="highlight-pcp"></canvas>
               <svg id="overlay-svg-pcp"></svg>
+            </div>
+
+            <div id="controls-pcp-building" style="display: none">
+              <label for="viewTowards">View Towards:</label>
+              <select id="viewTowards">
+                <option value="building">Building</option>
+                <option value="water">Water</option>
+              </select>
+
+              <button
+                id="compute-facade"
+                class="userButton"
+                style="margin-left: 1em"
+              >
+                Compute Facade
+              </button>
+            </div>
+
+            <div id="controls-pcp">
+              <label for="myCheckbox01">#Locations:</label>
+              <input
+                type="number"
+                id="numLocations"
+                min="1"
+                value="5"
+                max="1000"
+              />
+
+              <label for="myCheckbox01" style="margin-left: 1em">
+                <input
+                  type="checkbox"
+                  class="checkbox__input"
+                  id="plane-checkbox"
+                />
+                Plane
+              </label>
+
+              <button
+                id="query-viewpoints-pcp"
+                class="userButton"
+                style="margin-left: 1em"
+              >
+                Query Viewpoints
+              </button>
             </div>
           </div>
         </div>
@@ -75,6 +114,6 @@
   </body>
   <script src="https://d3js.org/d3.v2.js"></script>
   <script src="https://underscorejs.org/underscore.js"></script>
-  <script src="parallel.js"></script>
+  <script src="parallel_new.js"></script>
   <script src="scatter.js"></script>
 </html>

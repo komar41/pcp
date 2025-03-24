@@ -2,34 +2,86 @@
 // Copyright (c) 2012, Kai Chang
 // Released under the BSD License: http://opensource.org/licenses/BSD-3-Clause
 
-const activeAxes = new Set();
+const categoryOptions = {
+  semantics: [
+    "building",
+    "miscellaneous",
+    "road",
+    "sidewalk",
+    "sky",
+    "surface",
+    "tree",
+    "water",
+  ],
+  building: ["brick", "concrete", "marble", "plaster", "metal"],
+  perception: [
+    "greenness",
+    "openness",
+    "imageability",
+    "enclosure",
+    "walkability",
+    "serenity",
+  ],
+};
 
-// Initialize all axes on page load
-window.onload = function () {
-  document.querySelectorAll(".axis-btn-pcp").forEach((btn) => {
-    const axis = btn.getAttribute("data-axis-pcp");
+const dataFiles = {
+  semantics: "test_set_as_query.json",
+  building: "test_set_buildings_as_query.json",
+  perception: "test_set_perception_as_query.json",
+};
 
+let activeAxes = new Set();
+let currentCategory = "semantics";
+
+function renderButtons(category) {
+  const container = document.getElementById("axis-buttons-pcp");
+  container.innerHTML = ""; // Clear current buttons
+  activeAxes = new Set(); // Reset active axes
+
+  categoryOptions[category].forEach((axis) => {
+    const btn = document.createElement("button");
+    btn.classList.add("axis-btn-pcp", "active-axis-pcp");
+    btn.textContent = axis.charAt(0).toUpperCase() + axis.slice(1);
+    btn.setAttribute("data-axis-pcp", axis);
     activeAxes.add(axis);
-    btn.classList.add("active-axis-pcp");
+    container.appendChild(btn);
 
-    // Setup toggle functionality
+    // Add click event for toggle
     btn.addEventListener("click", () => {
       if (activeAxes.has(axis)) {
-        remove_axis(axis); // assume function exists
+        console.log("removing axis", axis);
+        remove_axis(axis); // Placeholder: your implementation
         activeAxes.delete(axis);
         btn.classList.remove("active-axis-pcp");
       } else {
+        console.log("adding axis", axis);
         add_axis(axis);
         activeAxes.add(axis);
         btn.classList.add("active-axis-pcp");
       }
     });
   });
+}
+
+window.onload = function () {
+  renderButtons(currentCategory);
+
+  document.querySelectorAll(".category-tab").forEach((tab) => {
+    tab.addEventListener("click", (e) => {
+      document
+        .querySelectorAll(".category-tab")
+        .forEach((t) => t.classList.remove("selected"));
+      e.target.classList.add("selected");
+
+      currentCategory = e.target.getAttribute("data-category");
+      renderButtons(currentCategory);
+    });
+  });
 };
 
 var container = document.getElementById("container-pcp");
 var width = container.clientWidth,
-  height = container.clientHeight - 50;
+  height = container.clientHeight - 70;
 var m = [30, 0, 10, 0],
   w = width - m[1] - m[3],
   h = height - m[0] - m[2],
@@ -86,7 +138,7 @@ var svg = d3
   .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
 // Load the data and visualization
-d3.json("test.json", function (raw_data) {
+d3.json("test_set_as_query.json", function (raw_data) {
   // console.log(raw_data);
   // Convert quantitative scales to floats
   data = raw_data.map(function (d) {
@@ -274,6 +326,8 @@ function brush() {
     d3.select("#exclude-data").attr("disabled", "disabled");
   }
 
+  // console.log(selected);
+
   // Render selected lines
   paths(selected, foreground, brush_count, true);
 }
@@ -414,7 +468,7 @@ function actives() {
 function update_remove() {
   var container = document.getElementById("container-pcp");
   var width = container.clientWidth,
-    height = container.clientHeight - 50;
+    height = container.clientHeight - 70;
 
   (w = width - m[1] - m[3]), (h = height - m[0] - m[2]);
 
@@ -512,9 +566,6 @@ function add_axis(axisName) {
   update_dropdown();
   brush();
 
-  // console.log(dimensions);
-
-  // Create a new axis group for the added dimension
   var g = svg.selectAll(".dimension").data(dimensions, (d) => d);
 
   var newAxis = g
