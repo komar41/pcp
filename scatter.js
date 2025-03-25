@@ -1,72 +1,78 @@
-let currentProjection = "PCA";
+let scatterCurProjection = "PCA";
 
-const btnPCA = document.getElementById("btn-pca");
-const btnUMAP = document.getElementById("btn-umap");
+const scatterBtnPCA = document.getElementById("btn-pca");
+const scatterBtnUMAP = document.getElementById("btn-umap");
 
-btnPCA.addEventListener("click", () => {
-  if (currentProjection !== "PCA") {
-    currentProjection = "PCA";
-    setActiveButton("PCA");
+scatterBtnPCA.addEventListener("click", () => {
+  if (scatterCurProjection !== "PCA") {
+    scatterCurProjection = "PCA";
+    setActiveBtnProjection("PCA");
     drawScatter();
   }
 });
 
-btnUMAP.addEventListener("click", () => {
-  if (currentProjection !== "UMAP") {
-    currentProjection = "UMAP";
-    setActiveButton("UMAP");
+scatterBtnUMAP.addEventListener("click", () => {
+  if (scatterCurProjection !== "UMAP") {
+    scatterCurProjection = "UMAP";
+    setActiveBtnProjection("UMAP");
     drawScatter();
   }
 });
 
-function setActiveButton(projection) {
+function setActiveBtnProjection(projection) {
   if (projection === "PCA") {
-    btnPCA.classList.add("active");
-    btnUMAP.classList.remove("active");
+    scatterBtnPCA.classList.add("active");
+    scatterBtnUMAP.classList.remove("active");
   } else {
-    btnUMAP.classList.add("active");
-    btnPCA.classList.remove("active");
+    scatterBtnUMAP.classList.add("active");
+    scatterBtnPCA.classList.remove("active");
   }
 }
-const svgElement = document.getElementById("svg-scatter");
+const svgElementScatter = document.getElementById("svg-scatter");
 
-let svg_scatter = d3v7.select(svgElement);
-let margin = { top: 20, right: 0, bottom: 20, left: 0 };
-let lastTransform = d3v7.zoomIdentity; // Remember zoom state globally
-let zoomEnabled = true;
+let svg_scatter = d3v7.select(svgElementScatter);
+let marginScatter = { top: 0, right: 0, bottom: 0, left: 0 };
+let lastTransformScatter = d3v7.zoomIdentity; // Remember zoom state globally
+let zoomEnabledScatter = true;
 
 // Wrapper to redraw the chart
 function drawScatter() {
   // Get current container sizes
-  const wrapper = document.querySelector(".wrapper-scatter");
-  const container = document.querySelector(".container-scatter");
-  const width = wrapper.clientWidth;
-  const height = wrapper.clientHeight - container.offsetHeight;
+  const wrapperScatter = document.querySelector(".wrapper-scatter");
+  const containerScatter = document.querySelector(".container-scatter");
+  const width = wrapperScatter.clientWidth;
+  const height = wrapperScatter.clientHeight - containerScatter.offsetHeight;
 
-  updateProjection(currentProjection, width, height);
+  updateProjection(scatterCurProjection, width, height);
 }
 
 // Main function to create or update the scatter plot
 function updateProjection(projectionType, width, height) {
-  d3v7.json("test.json").then((rawData) => {
-    svg_scatter.selectAll("*").remove(); // Clear everything before redrawing
-
+  d3v7.json(dataFiles[currentCategory]).then((rawData) => {
+    // console.log(rawData);
     const data = rawData.map((d) => ({
       x: d[projectionType][0],
       y: d[projectionType][1],
+      id: d.image_name,
     }));
 
     const xExtent = d3v7.extent(data, (d) => d.x);
     const yExtent = d3v7.extent(data, (d) => d.y);
 
+    // remove previous scatter plot
+    svg_scatter.selectAll("*").remove();
+
     svg_scatter.attr("width", width).attr("height", height);
 
     const chart = svg_scatter
       .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+      .attr(
+        "transform",
+        `translate(${marginScatter.left}, ${marginScatter.top})`
+      );
 
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const innerWidth = width - marginScatter.left - marginScatter.right;
+    const innerHeight = height - marginScatter.top - marginScatter.bottom;
 
     const pointRadius = 1;
     const xPadding = (xExtent[1] - xExtent[0]) * 0.01;
@@ -92,7 +98,7 @@ function updateProjection(projectionType, width, height) {
     let scatterGroup = chart
       .append("g")
       .attr("clip-path", "url(#clip)")
-      .attr("transform", lastTransform);
+      .attr("transform", lastTransformScatter);
 
     const points = scatterGroup
       .selectAll("circle")
@@ -111,9 +117,9 @@ function updateProjection(projectionType, width, height) {
       .zoom()
       .scaleExtent([1, 10])
       .on("zoom", (event) => {
-        if (zoomEnabled) {
-          lastTransform = event.transform;
-          scatterGroup.attr("transform", lastTransform);
+        if (zoomEnabledScatter) {
+          lastTransformScatter = event.transform;
+          scatterGroup.attr("transform", lastTransformScatter);
         }
       });
 
@@ -124,12 +130,12 @@ function updateProjection(projectionType, width, height) {
         [innerWidth, innerHeight],
       ])
       .on("brush", (event) => {
-        if (!zoomEnabled) {
+        if (!zoomEnabledScatter) {
           const selection = event.selection;
           if (!selection) return;
 
-          const newXScale = lastTransform.rescaleX(xScale);
-          const newYScale = lastTransform.rescaleY(yScale);
+          const newXScale = lastTransformScatter.rescaleX(xScale);
+          const newYScale = lastTransformScatter.rescaleY(yScale);
 
           const [[x0, y0], [x1, y1]] = selection;
 
@@ -141,13 +147,13 @@ function updateProjection(projectionType, width, height) {
         }
       })
       .on("end", (event) => {
-        if (!zoomEnabled && !event.selection) {
+        if (!zoomEnabledScatter && !event.selection) {
           points.classed("selected-scatter", false);
         }
       });
 
-    if (zoomEnabled) {
-      svg_scatter.call(zoom.transform, lastTransform); // Restore zoom position
+    if (zoomEnabledScatter) {
+      svg_scatter.call(zoom.transform, lastTransformScatter); // Restore zoom position
       svg_scatter.call(zoom);
     } else {
       svg_scatter.on(".zoom", null); // Disable zoom
@@ -157,15 +163,15 @@ function updateProjection(projectionType, width, height) {
     document
       .getElementById("zoomToggle-scatter")
       .addEventListener("change", function () {
-        zoomEnabled = this.checked;
+        zoomEnabledScatter = this.checked;
 
-        if (zoomEnabled) {
+        if (zoomEnabledScatter) {
           brushLayer.call(brush.move, null);
           brushLayer.selectAll("*").remove();
-          svg_scatter.call(zoom.transform, lastTransform);
+          svg_scatter.call(zoom.transform, lastTransformScatter);
           svg_scatter.call(zoom);
         } else {
-          scatterGroup.attr("transform", lastTransform);
+          scatterGroup.attr("transform", lastTransformScatter);
           svg_scatter.on(".zoom", null);
           brushLayer.call(brush);
         }
@@ -176,12 +182,23 @@ function updateProjection(projectionType, width, height) {
 // Initial load
 drawScatter();
 
-// Listen to dropdown changes
-// dropdown.addEventListener("change", drawScatter);
-
 // Debounced resize listener
 let resizeTimeout;
 window.addEventListener("resize", () => {
-  console.log("resizing");
+  // console.log("resizing");
   drawScatter();
 });
+
+window.updateScatter = function (selectedData) {
+  const selectedIds = new Set(selectedData.map((d) => d.image_name || d.id));
+
+  d3v7
+    .selectAll("circle")
+    .attr("fill", (d) => {
+      return "#7570b3";
+    })
+    .attr(
+      "opacity",
+      (d) => (selectedIds.has(d.id) ? 0.25 : 0) // higher opacity for selected
+    );
+};

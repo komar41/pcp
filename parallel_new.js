@@ -55,6 +55,7 @@ let statePerCategory = {
 const container = document.getElementById("container-pcp");
 const width = container.clientWidth;
 const height = container.clientHeight - 100;
+let pcp_data_length;
 
 let data,
   dimensions,
@@ -74,7 +75,9 @@ let foreground,
   axis = d3.svg
     .axis()
     .orient("left")
-    .ticks(1 + height / 50);
+    .ticks(1 + height / 50),
+  brushSelected,
+  activeAxes;
 
 window.onload = function () {
   setupHeaderEvents();
@@ -92,6 +95,7 @@ function setupHeaderEvents() {
       e.target.classList.add("selected");
       currentCategory = e.target.getAttribute("data-category");
 
+      drawScatter();
       toggleControls(currentCategory);
       loadCategoryData(currentCategory);
     });
@@ -109,17 +113,24 @@ function toggleControls(category) {
 function loadCategoryData(category) {
   d3.json(dataFiles[category], function (rawData) {
     const parsed = rawData.map((d) => {
+      const transformed = {};
       for (let k in d["f_xyz"]) {
-        d["f_xyz"][k] = (parseFloat(d["f_xyz"][k]) / 2 + 0.5) * 100;
+        transformed[k] = parseFloat(d["f_xyz"][k]) * 100;
       }
-      return d["f_xyz"];
+      transformed["id"] = d["image_name"];
+      return transformed;
     });
+    pcp_data_length = parsed.length;
+    // console.log(pcp_data_length);
 
     statePerCategory[category].data = parsed;
     statePerCategory[category].dimensions = Object.keys(parsed[0]);
 
     // Update global references and render
     data = parsed;
+
+    // console.log(data);
+
     dimensions = [...statePerCategory[category].dimensions];
     removed_axes = [...statePerCategory[category].removedAxes];
 
@@ -233,16 +244,6 @@ function renderButtons(category) {
   });
 }
 
-// var container = document.getElementById("container-pcp");
-// var width = container.clientWidth,
-//   height = container.clientHeight - 70;
-// var dragging = {},
-//   line = d3.svg.line(),
-//   axis = d3.svg
-//     .axis()
-//     .orient("left")
-//     .ticks(1 + height / 50);
-
 // Foreground canvas for primary view
 foreground = document.getElementById("foreground-pcp").getContext("2d");
 foreground.globalCompositeOperation = "destination-over";
@@ -262,9 +263,8 @@ background.lineWidth = 1.7;
 
 // render polylines i to i+render_speed
 function render_range(selection, i, max, opacity) {
-  // console.log(selection);
   selection.slice(i, max).forEach(function (d) {
-    path(d, foreground, color(opacity));
+    path(d, foreground, color(opacity, selection.length));
   });
 }
 
@@ -297,9 +297,7 @@ function path(d, ctx, color) {
   ctx.stroke();
 }
 
-function color(a) {
-  // var c = colors[d];
-  // console.log(a)
+function color(a, len) {
   return "rgba(117,112,179, " + a + ")";
 }
 
@@ -312,14 +310,15 @@ function position(d) {
 // TODO refactor
 function brush() {
   brush_count++;
-  console.log(brush_count);
-  console.log(dimensions);
+
   var actives = dimensions.filter(function (p) {
       return !yscale[p].brush.empty();
     }),
     extents = actives.map(function (p) {
       return yscale[p].brush.extent();
     });
+
+  activeAxes = actives;
 
   // hack to hide ticks beyond extent
   var b = d3.selectAll(".dimension")[0].forEach(function (element, i) {
@@ -359,8 +358,6 @@ function brush() {
       : null;
   });
 
-  // console.log(selected);
-
   if (selected.length < data.length && selected.length > 0) {
     d3.select("#keep-data").attr("disabled", null);
     d3.select("#exclude-data").attr("disabled", null);
@@ -368,11 +365,12 @@ function brush() {
     d3.select("#keep-data").attr("disabled", "disabled");
     d3.select("#exclude-data").attr("disabled", "disabled");
   }
-
-  // console.log(selected);
-
-  // Render selected lines
   paths(selected, foreground, brush_count, true);
+  brushSelected = selected;
+
+  if (window.updateScatter) {
+    window.updateScatter(selected);
+  }
 }
 
 // render a set of polylines on a canvas
@@ -396,6 +394,69 @@ function paths(selected, ctx, count) {
   }
 
   d3.timer(animloop);
+}
+
+function handleQueryViewpointsClick() {
+  if (brushSelected.length !== pcp_data_length) {
+    // console.log("Selected data: ", brushSelected);
+
+    // Get the categories (keys) from the first object, excluding "id"
+    const keys = Object.keys(brushSelected[0]).filter((k) => k !== "id");
+
+    const mins = {};
+    const maxs = {};
+
+    // Initialize min and max
+    keys.forEach((key) => {
+      mins[key] = Infinity;
+      maxs[key] = -Infinity;
+    });
+
+    // Compute min and max for each category
+    brushSelected.forEach((d) => {
+      keys.forEach((key) => {
+        const val = parseFloat(d[key]);
+        if (!isNaN(val)) {
+          if (val < mins[key]) mins[key] = val;
+          if (val > maxs[key]) maxs[key] = val;
+        }
+      });
+    });
+
+    // console.log(mins);
+    // console.log(maxs);
+
+    // Compute midpoints and intervals
+    const f_xyz = {};
+    const intervals = {};
+
+    keys.forEach((key) => {
+      if (activeAxes.includes(key)) {
+        const min = mins[key];
+        const max = maxs[key];
+        const midpoint = (min + max) / 2;
+        const intervalSize = max - min;
+
+        f_xyz[key] = midpoint / 100;
+        intervals[key] = intervalSize / 100;
+      }
+    });
+
+    // Create the final object
+    const queryObject = {
+      f_xyz: f_xyz,
+      intervals: intervals,
+      point_on_plane: "",
+      direction_1: "",
+      direction_2: "",
+      r: "",
+      num_locations: "",
+      seed: "",
+    };
+
+    console.log("Constructed Query Object:", queryObject);
+    return queryObject;
+  }
 }
 
 // transition ticks for reordering, rescaling and inverting
@@ -511,7 +572,7 @@ function actives() {
 function update_remove() {
   var container = document.getElementById("container-pcp");
   var width = container.clientWidth,
-    height = container.clientHeight - 70;
+    height = container.clientHeight - 100;
 
   (w = width - m[1] - m[3]), (h = height - m[0] - m[2]);
 

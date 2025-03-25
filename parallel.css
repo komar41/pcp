@@ -82,6 +82,8 @@
 #controls-pcp,
 #controls-pcp-building {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 0.8em;
   margin-top: 5px;
   font-size: 14px;
@@ -112,4 +114,9 @@
   /* border: none; */
   border-radius: 4px;
   cursor: pointer;
+}
+
+#chart-pcp {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15); /* subtle shadow */
+  border-radius: 10px; /* optional: rounded corners */
 }

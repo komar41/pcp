@@ -49,7 +49,7 @@ body {
 
 .right-box {
   padding: 10px;
-  height: calc(50% - 6px); /* subtract separator height */
+  height: calc(50% - 12px); /* subtract separator height */
   display: flex;
   align-items: flex-start; /* align content to top */
   justify-content: center;

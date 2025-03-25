@@ -62,3 +62,8 @@
 #zoomToggle-scatter {
   accent-color: #7570b3; /* change to any color you like */
 }
+
+#svg-scatter {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15); /* subtle shadow */
+  border-radius: 10px; /* optional: rounded corners */
+}

@@ -80,6 +80,7 @@
                 id="query-viewpoints-pcp"
                 class="userButton"
                 style="margin-left: 1em"
+                onclick="handleQueryViewpointsClick()"
               >
                 Query Viewpoints
               </button>
@@ -105,7 +106,10 @@
                 </label>
               </div>
             </div>
-            <svg id="svg-scatter"></svg>
+
+            <div class="svg-scatter-wrapper">
+              <svg id="svg-scatter"></svg>
+            </div>
           </div>
         </div>
         <!-- <div class="right-box box3">Box 3</div> -->
